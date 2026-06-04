@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "node src/index.js",
+    "start": "node src/index.ts",
     "db:migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
