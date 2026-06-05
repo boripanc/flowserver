@@ -8,8 +8,20 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 3001
 
+// CORS — set CORS_ORIGIN in .env as a comma-separated list of allowed origins.
+// Leave unset (or use *) to allow all origins.
+const rawOrigins = process.env.CORS_ORIGIN || '*'
+const corsOptions = {
+  origin:
+    rawOrigins === '*'
+      ? '*'
+      : rawOrigins.split(',').map((o) => o.trim()),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}
+
 // Middleware
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(express.json({ limit: '10mb' }))
 
 // Routes
