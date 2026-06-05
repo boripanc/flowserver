@@ -3,8 +3,8 @@ import { pool } from '../db/pool.js'
 
 const router = Router()
 
-// Deploy (create or update) a workflow
-router.post('/deploy', async (req, res) => {
+// Save (create or update) a workflow
+router.post('/save', async (req, res) => {
   const { id, name, nodes, edges } = req.body
 
   if (!nodes || !edges) {
@@ -21,7 +21,7 @@ router.post('/deploy', async (req, res) => {
       // Update existing workflow
       result = await client.query(
         `UPDATE workflows
-         SET name = $1, nodes = $2, edges = $3, status = 'deployed', updated_at = NOW(), deployed_at = NOW()
+         SET name = $1, nodes = $2, edges = $3, status = 'saved', updated_at = NOW()
          WHERE id = $4
          RETURNING *`,
         [name || 'Untitled Workflow', JSON.stringify(nodes), JSON.stringify(edges), id]
@@ -34,30 +34,30 @@ router.post('/deploy', async (req, res) => {
     } else {
       // Create new workflow
       result = await client.query(
-        `INSERT INTO workflows (name, nodes, edges, status, deployed_at)
-         VALUES ($1, $2, $3, 'deployed', NOW())
+        `INSERT INTO workflows (name, nodes, edges, status)
+         VALUES ($1, $2, $3, 'saved')
          RETURNING *`,
         [name || 'Untitled Workflow', JSON.stringify(nodes), JSON.stringify(edges)]
       )
     }
 
     const workflow = result.rows[0]
-    console.log(`Workflow deployed: ${workflow.id} - ${workflow.name}`)
+    console.log(`Workflow saved: ${workflow.id} - ${workflow.name}`)
 
     res.status(200).json({
-      message: 'Workflow deployed successfully',
+      message: 'Workflow saved successfully',
       workflow: {
         id: workflow.id,
         name: workflow.name,
         status: workflow.status,
         nodesCount: nodes.length,
         edgesCount: edges.length,
-        deployedAt: workflow.deployed_at,
+        updatedAt: workflow.updated_at,
       },
     })
   } catch (error) {
-    console.error('Deploy error:', error)
-    res.status(500).json({ error: 'Failed to deploy workflow' })
+    console.error('Save error:', error)
+    res.status(500).json({ error: 'Failed to save workflow' })
   } finally {
     client.release()
   }
