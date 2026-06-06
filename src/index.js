@@ -1,8 +1,10 @@
+import http from 'http'
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import workflowRoutes from './routes/workflows.js'
 import engineRoutes from './routes/engine.js'
+import { setupWebSocket } from './ws/manager.js'
 
 dotenv.config()
 
@@ -34,7 +36,12 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-app.listen(PORT, () => {
+// Create HTTP server and attach WebSocket
+const server = http.createServer(app)
+setupWebSocket(server)
+
+server.listen(PORT, () => {
   console.log(`Workflow backend running on http://localhost:${PORT}`)
-  console.log(`Deploy endpoint: POST http://localhost:${PORT}/api/workflows/deploy`)
+  console.log(`WebSocket (engine) : ws://localhost:${PORT}/ws/engine?token=<uuid>`)
+  console.log(`WebSocket (client) : ws://localhost:${PORT}/ws/client`)
 })
