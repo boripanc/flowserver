@@ -102,6 +102,60 @@ router.get('/:id', async (req, res) => {
   }
 })
 
+// Update a workflow by ID
+router.put('/:id', async (req, res) => {
+  const { id } = req.params
+  const { name, nodes, edges, status } = req.body
+
+  if (!nodes || !edges) {
+    res.status(400).json({ error: 'nodes and edges are required' })
+    return
+  }
+
+  const client = await pool.connect()
+
+  try {
+    const result = await client.query(
+      `UPDATE workflows
+       SET name = $1, nodes = $2, edges = $3, status = $4, updated_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [
+        name || 'Untitled Workflow',
+        JSON.stringify(nodes),
+        JSON.stringify(edges),
+        status || 'saved',
+        id,
+      ]
+    )
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Workflow not found' })
+      return
+    }
+
+    const workflow = result.rows[0]
+    console.log(`Workflow updated: ${workflow.id} - ${workflow.name}`)
+
+    res.json({
+      message: 'Workflow updated successfully',
+      workflow: {
+        id: workflow.id,
+        name: workflow.name,
+        status: workflow.status,
+        nodesCount: nodes.length,
+        edgesCount: edges.length,
+        updatedAt: workflow.updated_at,
+      },
+    })
+  } catch (error) {
+    console.error('Update error:', error)
+    res.status(500).json({ error: 'Failed to update workflow' })
+  } finally {
+    client.release()
+  }
+})
+
 // Delete a workflow
 router.delete('/:id', async (req, res) => {
   const { id } = req.params
