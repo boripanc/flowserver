@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import workflowRoutes from './routes/workflows.js'
+import engineRoutes from './routes/engine.js'
 
 dotenv.config()
 
@@ -26,6 +27,7 @@ app.use(express.json({ limit: '10mb' }))
 
 // Routes
 app.use('/api/workflows', workflowRoutes)
+app.use('/api/engines', engineRoutes)
 
 // Health check
 app.get('/api/health', (_req, res) => {
